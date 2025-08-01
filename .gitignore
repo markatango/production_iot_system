@@ -1,5 +1,8 @@
 **/keys/
 *key.pem
 commands/
+__pycache__/
+*.pyc
+*.pyo
 
 
