@@ -1344,6 +1344,117 @@ async def sensor_simulation():
         
         # Give a moment for cleanup
         await asyncio.sleep(0.5)
+        
+        
+        
+async def auto_publish():
+    """Simulate IoT sensor data publishing"""
+    import random
+    
+    client = CompatibleMQTTClient(client_id="auto_publisher", auto_reconnect=True, reconnect_delay=5.0)
+    
+    async def on_connect():
+        print("✅ Auto publisher connected to broker successfully!")
+    
+    async def on_disconnect():
+        print("🔴 Auto publisher disconnected from broker")
+    
+    async def on_reconnect():
+        print("🔄 Auto publisher reconnected to broker!")
+    
+    async def on_hello(topic: str, payload: bytes):
+        print("✅ Auto publisher authenticated with broker!")
+    
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+    client.on_reconnect = on_reconnect
+    client.on_hello = on_hello
+    
+    print("🌡️  IoT Auto publisher")
+    print("=" * 30)
+    
+    try:
+        # Connect to broker (will keep trying if broker isn't available)
+        print("🔌 Connecting to broker...")
+        success = await client.connect(host="broker.emqx.io", port=1883)
+        
+        if not success and not client.auto_reconnect:
+            print("❌ Failed to connect to broker and auto-reconnect is disabled")
+            return
+        elif not success:
+            print("⏳ Broker not available yet, will keep trying to connect...")
+        
+        print("📡 Auto publisher will publish data every 5 seconds once connected")
+        print("💡 The Auto publisher will automatically connect when broker becomes available")
+        print("Press Ctrl+C to stop")
+        
+        # Wait for initial connection if not already connected
+        if not client.is_connected():
+            print("⏳ Waiting for connection to broker...")
+            connected = await client.wait_for_connection(timeout=30.0)
+            if not connected:
+                print("⚠️  Still waiting for broker... (will continue trying in background)")
+        topic = "emqx/esp32"
+        while True:
+            try:
+                # Only publish if connected
+                if client.is_connected():
+                    try:
+                        # Generate random data
+                        temperature = round(random.uniform(18.0, 35.0), 1)
+                        humidity = round(random.uniform(18.0, 35.0), 1)
+                        pressure = round(random.uniform(18.0, 35.0), 1)
+                        
+                        
+                        # Publish data
+                        success1 = await client.publish(topic, f"{temperature}".encode(), QoS.AT_LEAST_ONCE)
+                        success2 = await client.publish(topic, f"{humidity}".encode(), QoS.AT_LEAST_ONCE)
+                        success3 = await client.publish(topic, f"{pressure}".encode(), QoS.AT_LEAST_ONCE)
+                        
+                        # Send status update
+                        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+                        status = {"timestamp": timestamp, "temp": temperature, "humidity": humidity, "pressure": pressure}
+                        success4 = await client.publish(topic, json.dumps(status).encode(), retain=True)
+
+                        if all([success1, success2, success3, success4]):
+                            print(f"📊 T:{temperature}°C H:{humidity}% P:{pressure}hPa")
+                        else:
+                            print(f"⚠️  T:{temperature}°C H:{humidity}% P:{pressure}hPa (some messages failed)")
+                            
+                    except Exception as e:
+                        print(f"❌ Error publishing sensor data: {e}")
+                else:
+                    print("⏳ Waiting for broker connection...")
+                    # Wait for connection to be restored
+                    connected = await client.wait_for_connection(timeout=10.0)
+                    if not connected:
+                        print("🔄 Still waiting for broker...")
+                
+                await asyncio.sleep(5)
+                
+            except asyncio.CancelledError:
+                # Handle cancellation gracefully
+                break
+            except Exception as e:
+                print(f"❌ Unexpected error in sensor loop: {e}")
+                await asyncio.sleep(1)
+                
+    except KeyboardInterrupt:
+        pass  # Handle Ctrl+C gracefully
+    except Exception as e:
+        print(f"❌ Fatal error in sensor simulation: {e}")
+    finally:
+        print("\n🛑 Stopping sensor simulation...")
+        try:
+            await client.disconnect()
+            print("✅ Sensor disconnected cleanly")
+        except Exception as e:
+            print(f"⚠️  Error during disconnect: {e}")
+        
+        # Give a moment for cleanup
+        await asyncio.sleep(0.5)        
+
+
 
 async def dashboard_client():
     """Simple dashboard client to monitor sensor data"""
@@ -1356,7 +1467,7 @@ async def dashboard_client():
     
     async def on_message(topic: str, payload: bytes, qos: QoS, retain: bool):
         try:
-            if topic.startswith("sensors/"):
+            if topic.startswith("emqx/"):
                 sensor_type = topic.split("/")[1]
                 value = payload.decode('utf-8')
                 
@@ -1404,6 +1515,8 @@ async def dashboard_client():
     finally:
         await client.disconnect()
         print("✅ Dashboard disconnected")
+        
+        
 
 # Additional utility functions for testing
 async def stress_test():
@@ -1478,6 +1591,8 @@ if __name__ == "__main__":
                 asyncio.run(dashboard_client())
             elif sys.argv[1] == "stress":
                 asyncio.run(stress_test())
+            elif sys.argv[1] == "auto":
+                asyncio.run(auto_publish())
             else:
                 main()
         else:
