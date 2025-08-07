@@ -1120,6 +1120,8 @@ def main():
                        help='Subscribe to topic and listen')
     parser.add_argument('--publish', '-p', nargs=2, metavar=('TOPIC', 'MESSAGE'),
                        help='Publish message to topic')
+    parser.add_argument('--auto_publish', '-a', nargs=4, metavar=('TOPIC', 'MESSAGE', 'NUM', 'DELAY'),
+                       help='Publish message to topic')
     parser.add_argument('--qos', type=int, choices=[0, 1, 2], default=0,
                        help='QoS level (default: 0)')
     parser.add_argument('--retain', action='store_true',
@@ -1137,6 +1139,8 @@ def main():
             asyncio.run(subscribe_mode(args))
         elif args.publish:
             asyncio.run(publish_mode(args))
+        elif args.auto_publish:
+            asyncio.run(auto_publish_mode(args))
         else:
             asyncio.run(example_client())
     except KeyboardInterrupt:
@@ -1238,6 +1242,68 @@ async def publish_mode(args):
         print(f"❌ Failed to publish message to '{topic}'")
     
     await client.disconnect()
+    
+    
+    
+    
+    
+    
+    
+async def auto_publish_mode(args):
+    """Auto_Publish mode - send multiple messages"""
+    client = CompatibleMQTTClient(client_id=args.client_id)
+    
+    async def on_hello(topic: str, payload: bytes):
+        print("✅ Authentication successful (HELLO received)")
+    
+    client.on_hello = on_hello
+    
+    # Connect
+    port = args.ssl_port if args.ssl else args.port
+    success = await client.connect(
+        host=args.host,
+        port=port,
+        use_ssl=args.ssl,
+        cert_file=args.cert,
+        username=args.username,
+        password=args.password,
+        verify_cert=False
+    )
+    
+    if not success:
+        print("❌ Failed to connect to broker")
+        return
+    
+    # Publish
+    topic, message, num, delay = args.auto_publish
+    qos = QoS(args.qos)
+    
+    for i in range(int(num)):
+        await asyncio.sleep(float(delay))
+        print(f"Publishing message {i+1}/{num} to '{topic}'")
+        success = await client.publish(
+            topic=topic,
+            payload=f"{message} _ {i}".encode('utf-8'),
+            qos=qos,
+            retain=args.retain
+    )
+    
+    if success:
+        print(f"✅ Published message to '{topic}': {message}")
+    else:
+        print(f"❌ Failed to publish message to '{topic}'")
+    
+    await client.disconnect()    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 async def sensor_simulation():
     """Simulate IoT sensor data publishing"""
