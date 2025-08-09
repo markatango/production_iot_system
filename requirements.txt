@@ -1,0 +1,46 @@
+# MQTT IoT Broker and Client - Python Dependencies
+# Compatible with Python 3.7+
+
+# Core cryptography library for SSL/TLS certificate generation
+cryptography>=3.4.8,<42.0.0
+
+# Additional dependencies that might be needed depending on your system
+# These are typically included with Python but listed for completeness
+
+# Standard library modules used (no installation needed):
+# - asyncio (Python 3.7+)
+# - ssl (built-in)
+# - socket (built-in) 
+# - struct (built-in)
+# - time (built-in)
+# - uuid (built-in)
+# - logging (built-in)
+# - json (built-in)
+# - argparse (built-in)
+# - datetime (built-in)
+# - ipaddress (built-in)
+# - enum (built-in)
+# - typing (built-in in Python 3.7+)
+
+# Optional: For enhanced debugging and development
+# pytest>=6.0.0  # For running tests
+# black>=21.0.0   # For code formatting
+# flake8>=3.8.0   # For code linting
+
+# System requirements:
+# - Python 3.7 or higher
+# - OpenSSL support (usually included with Python)
+
+# Platform-specific notes:
+# - Linux/macOS: Should work out of the box
+# - Windows: Requires Visual C++ build tools for cryptography compilation
+#   Alternative: Use pre-compiled wheels from PyPI
+
+# Installation instructions:
+# 1. Create virtual environment: python -m venv mqtt_env
+# 2. Activate environment:
+#    - Linux/macOS: source mqtt_env/bin/activate
+#    - Windows: mqtt_env\Scripts\activate
+# 3. Install dependencies: pip install -r requirements.txt
+# 4. Run broker: python iot_broker.py
+# 5. Run client: python compatible_iot_client.py sensor
