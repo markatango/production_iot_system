@@ -956,7 +956,8 @@ class MQTTBroker:
         sent_count = 0
         for client_id in recipients:
             if client_id == publisher_id:
-                continue  # Don't send back to publisher
+                pass
+                # continue  # Don't send back to publisher
                 
             client = self.clients.get(client_id)
             if client and client.connected:
@@ -1028,7 +1029,8 @@ async def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='MQTT Broker with SSL/TLS support')
-    parser.add_argument('--host', default='localhost', help='Broker host (default: localhost)')
+    parser.add_argument('--host', default='localhost', help='Binding address for broker (default: localhost) \
+          Use 0.0.0.0 to accept connections from other devices')
     parser.add_argument('--port', type=int, default=1883, help='Plain MQTT port (default: 1883)')
     parser.add_argument('--ssl-port', type=int, default=8883, help='SSL/TLS MQTT port (default: 8883)')
     parser.add_argument('--no-ssl', action='store_true', help='Disable SSL/TLS support')
