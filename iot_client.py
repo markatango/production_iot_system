@@ -1211,6 +1211,7 @@ async def publish_mode(args):
     
     # Connect
     port = args.ssl_port if args.ssl else args.port
+    print(f"{args.ssl=}, {args.cert=}, {args.username=}, {args.password=}, {args.ssl_port=}, {args.port=}")
     success = await client.connect(
         host=args.host,
         port=port,

@@ -666,7 +666,7 @@ class CertificateGenerator:
         subject = issuer = x509.Name([
             x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
             x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "CA"),
-            x509.NameAttribute(NameOID.LOCALITY_NAME, "San Francisco"),
+            x509.NameAttribute(NameOID.LOCALITY_NAME, "Arcadia"),
             x509.NameAttribute(NameOID.ORGANIZATION_NAME, "MQTT Broker"),
             x509.NameAttribute(NameOID.COMMON_NAME, hostname),
         ])
